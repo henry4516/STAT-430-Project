@@ -92,10 +92,3 @@ if __name__ == '__main__':
     #rng.sequences(LCG, 'LCG')
     #rng.sequences(BinaryShift, 'Mersenne')
     #rng.sequences(DecimalMethod, 'Decimal')
-
-    def slidesLCG(x):
-        return (3 * x + 7) % 31 + 1
-    
-    print(rng.generator(slidesLCG, 1)[:10])
-    print(rng.generator(slidesLCG, 2)[:10])
-    print(rng.generator(slidesLCG, 2)[:15])
