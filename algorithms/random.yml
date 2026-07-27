@@ -1,0 +1,14 @@
+name: random
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.12
+  - numpy
+  - pandas
+  - pytorch
+  - pip
+  - faiss-cpu
+  - scipy
+  - matplotlib
+  - statsmodels

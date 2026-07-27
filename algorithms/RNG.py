@@ -15,22 +15,6 @@ def LCG(x):
 
     return next + 1 # +1 to be between 1 and 1024
 
-def BinaryShift(x):
-    MASK = (1 << 10) - 1  # 1023
-
-    x ^= (x << 1) & MASK
-    x ^= x >> 5
-    x ^= (x << 2) & MASK
-    x = x & MASK
-
-    return x + 1
-
-def DecimalMethod(x):
-    y = np.sqrt(x * 133 + 29)
-    y /= 177
-    z = int(y * 23198891881357) % 1024
-    return z + 1
-
 class RNG:
     '''
     We redesigned the logics. Since a seed gives a unique sequence, we don't need to repeat for lengths 100, 500, 1500 -
@@ -76,8 +60,7 @@ class RNG:
 
         matrix = np.zeros((self.seedMax, self.length), dtype=np.int32)
         savePath = self.name + '_' + algorithm + '_' + str(self.length) + '.csv'
-        header = 'Seed,' + ','.join(['No.' + str(index) for index in np.arange(2, self.length + 1)])
-
+        header = ','.join(['No.' + str(index + 1) for index in np.arange(1500)])
         for i in np.arange(0, self.seedMax):
             seed = i + 1
             matrix[i] = self.generator(f, seed)
@@ -89,6 +72,4 @@ class RNG:
 
 if __name__ == '__main__':
     rng = RNG('430')
-    #rng.sequences(LCG, 'LCG')
-    #rng.sequences(BinaryShift, 'Mersenne')
-    #rng.sequences(DecimalMethod, 'Decimal')
+    rng.sequences(LCG, 'LCG')
