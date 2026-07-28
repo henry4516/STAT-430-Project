@@ -262,7 +262,6 @@ We now want to see whether the LCG family (LCG, RANDU) have the same performance
 \eq{\hat{C}_2=\frac{1}{10}\sum_{L}\bar{y}_{LCG,L}+\frac{1}{10}\sum_{L}\bar{y}_{RDU,L}-\frac{1}{10}\sum_{L}\bar{y}_{MT,L}-\frac{1}{10}\sum_{L}\bar{y}_{XOR,L}}
 From \ref{tab:Contrasts}, the difference is significant due to the small p-value. But the difference $-1.5\%$ is not very huge - this might be due to the large variability over the LCG groups. Overall, the two families are competitive.
 
-%\include{contrast_draft}
 
 \begin{table}[h]
 \centering
@@ -339,7 +338,7 @@ The result shows that both algorithm and sequence length have a strong impact on
 The conclusions suggest that the choice of PRNG should depend on the needs of the application rather than always using a single generator. Many applications need short and finitely ranged pseudo-random sequences, such as randomized controlled trials, A/B testing, or statistical simulations. Instead of blindly choosing the professional models, sometimes a small-period LCG with customized parameters\footnote{Make sure to satisfy the \nameref{thm:HDthm} and adjust its period to be close to the required length.} might have provided sufficient randomness while needing much less computational time and memory\footnote{This is commonly agreed. In the future, we can include  efficiency and costs as part of the overall score.}. For longer sequences required by the more rigorous simulations, the professional generators are still the preferred choice for their excellent capabilities of producing stable and robust sequences.
 
 The experiment outcome happens under a specific experimental setting, namely the range restricted to $[1,1024]$ and lengths up to 1500, and does not apply to all conditions in general. The randomness score designed by us should be interpreted as a preference measurement rather than a rigorously proven mathematical evaluation for industrial-level comparisons and analysis. Nevertheless, it is a certainly effective and stable indicator of randomness in this experiment.
-%\include{ANOVA analysis draft}
+
 
 
 
@@ -958,14 +957,6 @@ Outputs \ref{tab:AlgoCompByLen} and \ref{tab:LenCompByAlgo}.
 Outputs \ref{tab:Contrasts}.
 
 
-%\begin{tablenotes}[flushleft]
-%\small
-%\item Each entry gives the estimated difference in mean score, followed by
-%the multiplicity-adjusted \(p\)-value in parentheses.
-%A positive estimate means that the first algorithm has a larger estimated
-%mean than the second algorithm.
-%\end{tablenotes}
-
 
 \newpage
 \section{Residual Analysis}\label{ResidualAnalysis}
@@ -1122,20 +1113,6 @@ to be a dot on the plane $(0,0) \leq (x,y) \leq (1,1)$, as shown in Figure~\eqre
 If $X,Y$'s are uniformly distributed, the fraction of $D_i$'s with norm less than or equal to 1 (the blue dots) should be around the area of the quarter-circle, $\frac{1}{4}\pi$, based on a sufficiently large sample size $n$. Therefore, an unbiased estimator of $\pi$ such that $E(\hat{\pi})=\pi$ is
 \eq{\hat{\pi}=\frac{4}{n}\sum_{i=1}^n \mathbb{I}\set{\lVert D_i \rVert \leq 1}}
 where $\mathbb{I}\set{\cdot}$ is the indicator function.
-
-%\newpage
-%\section{Complete TukeyHSD Output}
-%\label{app:tukey}
-
-%The tables in this appendix reproduce the complete pairwise comparison results obtained from the \texttt{TukeyHSD} procedure. All reported confidence intervals are simultaneous 95\% confidence intervals, and the adjusted \(p\)-values control the family-wise error rate within each table. Because the algorithm-by-length interaction is statistically significant, Table~\ref{tab:tukey_all_cells} is the primary comparison table. The marginal comparisons for algorithm, message length, and seed group are also provided for completeness.
-
-
-
-
-%\input{tukey_algo}
-%\input{tukey_len}
-%\input{tukey_seed}
-%\input{tukey_all_cells}
 
 \printbibliography
 
