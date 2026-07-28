@@ -1,0 +1,200 @@
+---
+title: "Scores Manipulation"
+output: pdf_document
+date: "2026-07-22"
+---
+
+# This R code transforms and combines raw score data into the final data for our experiment.
+# output: RNG_data_R
+
+# read scores data
+```{r}
+LCG.scores <- read.csv('scores_data/LCG_scores.csv')
+names(LCG.scores)[names(LCG.scores) == 'length'] <- 'len'
+names(LCG.scores)[names(LCG.scores) == 'X..seed'] <- 'seed'
+LCG.scores$algo <- rep('LCG', length(LCG.scores$entropy))
+head(LCG.scores)
+
+RANDU.scores <- read.csv('scores_data/RANDU_scores.csv')
+names(RANDU.scores)[names(RANDU.scores) == 'length'] <- 'len'
+names(RANDU.scores)[names(RANDU.scores) == 'X..seed'] <- 'seed'
+RANDU.scores$algo <- rep('RANDU', length(RANDU.scores$entropy))
+head(RANDU.scores)
+
+MT.scores <- read.csv('scores_data/MT_scores.csv')
+names(MT.scores)[names(MT.scores) == 'length'] <- 'len'
+names(MT.scores)[names(MT.scores) == 'X..seed'] <- 'seed'
+MT.scores$algo <- rep('MT', length(MT.scores$entropy))
+head(MT.scores)
+
+XOR.scores <- read.csv('scores_data/XOR_scores.csv')
+names(XOR.scores)[names(XOR.scores) == 'length'] <- 'len'
+names(XOR.scores)[names(XOR.scores) == 'X..seed'] <- 'seed'
+XOR.scores$algo <- rep('XOR', length(XOR.scores$entropy))
+head(XOR.scores)
+```
+
+# evaluate final score
+```{r}
+# entropy.weight <- 0.3
+#  acf.weight <- 0.1
+#  uni.weight <- 0.15
+#  runs.weight <- 0.05
+#  #runs.weight <- 0.1
+#  pi.weight <- 0.25
+#  rep.weight <- 1 - entropy.weight - acf.weight - uni.weight - runs.weight - pi.weight
+
+# runs.weight <- 0
+# entropy.weight <- 0.3
+# acf.weight <- 0.3
+# uni.weight <- 0.1
+# pi.weight <- 0.05
+# rep.weight <- 1 - entropy.weight - acf.weight - uni.weight - runs.weight - pi.weight
+
+entropy.weight <- 1/5
+acf.weight <- 1/5
+uni.weight <- 1/5
+runs.weight <- 0
+pi.weight <- 1/5
+rep.weight <- 1 - entropy.weight - acf.weight - uni.weight - runs.weight - pi.weight
+  
+LCG.scores$score <- entropy.weight * LCG.scores$entropy +
+    acf.weight * LCG.scores$acf +
+    uni.weight * LCG.scores$uni +
+    runs.weight * LCG.scores$runs +
+    pi.weight * LCG.scores$pi +
+    rep.weight * LCG.scores$rep
+
+head(LCG.scores)
+
+RANDU.scores$score <- entropy.weight * RANDU.scores$entropy +
+    acf.weight * RANDU.scores$acf +
+    uni.weight * RANDU.scores$uni +
+    runs.weight * RANDU.scores$runs +
+    pi.weight * RANDU.scores$pi +
+    rep.weight * RANDU.scores$rep
+head(RANDU.scores)
+
+MT.scores$score <- entropy.weight * MT.scores$entropy +
+    acf.weight * MT.scores$acf +
+    uni.weight * MT.scores$uni +
+    runs.weight * MT.scores$runs +
+    pi.weight * MT.scores$pi +
+    rep.weight * MT.scores$rep
+
+head(MT.scores)
+
+XOR.scores$score <- entropy.weight * XOR.scores$entropy +
+    acf.weight * XOR.scores$acf +
+    uni.weight * XOR.scores$uni +
+    runs.weight * XOR.scores$runs +
+    pi.weight * XOR.scores$pi +
+    rep.weight * XOR.scores$rep
+
+head(XOR.scores)
+```
+
+# plot
+```{r}
+plot.scores <- function(df) {
+  print(ggplot(df, aes(x = len, y = entropy,
+               color = algo)) +
+  geom_point(size = 3) +
+  coord_cartesian(xlim = c(300,1500), ylim = c(0,1)) +
+    ggtitle('entropy'))
+  
+  print(ggplot(df, aes(x = len, y = runs,
+               color = algo)) +
+  geom_point(size = 3) +
+  coord_cartesian(xlim = c(300,1500), ylim = c(0,1)) +
+    ggtitle('runs'))
+  
+  print(ggplot(df, aes(x = len, y = acf,
+               color = algo)) +
+  geom_point(size = 3) +
+  coord_cartesian(xlim = c(300,1500), ylim = c(0,1)) +
+    ggtitle('acf'))
+  
+  print(ggplot(df, aes(x = len, y = pi,
+               color = algo)) +
+  geom_point(size = 3) +
+  coord_cartesian(xlim = c(300,1500), ylim = c(0,1)) +
+    ggtitle('pi'))
+  
+  print(ggplot(df, aes(x = len, y = uni,
+               color = algo)) +
+  geom_point(size = 3) +
+  coord_cartesian(xlim = c(300,1500), ylim = c(0,1)) +
+    ggtitle('uniformity'))
+  
+  print(ggplot(df, aes(x = len, y = rep,
+               color = algo)) +
+  geom_point(size = 3) +
+  coord_cartesian(xlim = c(300,1500), ylim = c(0,1)) +
+    ggtitle('repetition'))
+  
+  print(ggplot(df, aes(x = len, y = score,
+               color = algo)) +
+  geom_point(size = 3) +
+  coord_cartesian(xlim = c(300,1500), ylim = c(0,1)) +
+    ggtitle('overall score'))
+}
+
+library(ggplot2)
+plot.scores(LCG.scores)
+plot.scores(RANDU.scores)
+plot.scores(MT.scores)
+plot.scores(XOR.scores)
+
+```
+
+```{r}
+data.rng <- rbind(LCG.scores, RANDU.scores, MT.scores, XOR.scores)
+head(data.rng)
+
+ggplot(data.rng, aes(x = len, y = score,
+               color = algo)) +
+  geom_point(size = 3) +
+  coord_cartesian(xlim = c(300,1500), ylim = c(0.6,1)) +
+    ggtitle('score')
+
+ggplot(data.rng, aes(x = algo, y = score,
+               color = len)) +
+  geom_point(size = 3) +
+  coord_cartesian(ylim = c(0.6,1)) +
+    ggtitle('score')
+```
+
+```{r}
+# indicates the level of a seed
+seedEva <- function(seed) {
+  if (seed <= 250) {
+    return('low')
+  } else if (seed <= 500) {
+    return('low|mid') # middle low
+  } else if (seed <= 750) {
+    return('high|mid') # middle high
+  } else if (seed <= 1000) {
+    return('high')
+  } else {
+    return(NA)
+  }
+}
+
+data.rng$seedLevel <- sapply(data.rng$seed, seedEva)
+head(data.rng)
+write.csv(data.rng, file='RNG_data_R.csv', row.names = FALSE)
+```
+
+```{r}
+ggplot(data.rng, aes(x = len, y = score,
+               color = algo,
+               shape = seedLevel)) +
+  geom_point(size = 3)
+
+ggplot(data.rng, aes(x = algo, y = score,
+               color = len,
+               shape = seedLevel)) +
+  geom_point(size = 3)
+```
+

@@ -1,0 +1,461 @@
+---
+title: "STAT 430 Project R Code"
+output: pdf_document
+---
+
+# Read data
+```{r}
+data.rng <- read.csv('RNG_data_R.csv', header=TRUE)
+data.rng$len <- factor(data.rng$len)
+data.rng$algo <- factor(data.rng$algo)
+data.rng$seedLevel <- factor(data.rng$seedLevel)
+head(data.rng)
+```
+
+# Data Visualization
+```{r}
+png('plots/Raw Data/All Data Box Plot.png')
+boxplot(data.rng$score, main='Scores')
+dev.off()
+
+png('plots/Raw Data/AllDataHist.png')
+hist(data.rng$score, main='Scores')
+dev.off()
+
+png('plots/Main Factors/score by algo box.png')
+boxplot(score ~ algo, main='Randomness Score by Algorithm', xlab='Algorithm', ylab='Score', col=c('red','blue','green','orange'), data=data.rng)
+dev.off()
+
+png('plots/Main Factors/score by length box.png')
+boxplot(score ~ len, main='Randomness Score by Length', xlab='Length', ylab='Score', col=c('red','blue','green', 'orange', 'yellow'), data=data.rng)
+dev.off()
+
+png('plots/Seed Interactions/score by seed.png')
+boxplot(score ~ seedLevel, main='Randomness Score by Seed', xlab='Seed', ylab='Score', col=c('red','blue','green','orange'), data=data.rng)
+dev.off()
+
+# algo, len interaction
+png('plots/Main Factors/algo by len.png')
+interaction.plot(data.rng$algo, data.rng$len, data.rng$score, main='Score by Algorithm given Length', xlab='Algorithm', ylab='Score')
+dev.off()
+png('plots/Main Factors/len by algo.png')
+interaction.plot(data.rng$len, data.rng$algo, data.rng$score, main='Score by Length given Algorithm', xlab='Length', ylab='Score')
+dev.off()
+
+# algo, seed interaction
+png('plots/Seed Interactions/algo by seed.png')
+interaction.plot(data.rng$algo, data.rng$seedLevel, data.rng$score, main='Score by Algorithm given Seed', xlab='Algorithm', ylab='Score')
+dev.off()
+png('plots/Seed Interactions/seed by algo.png')
+interaction.plot(data.rng$seedLevel, data.rng$algo, data.rng$score, main='Score by Seed given Algorithm', xlab='Seed', ylab='Score')
+dev.off()
+
+# len, seed interaction
+png('plots/Seed Interactions/len by seed.png')
+interaction.plot(data.rng$len, data.rng$seedLevel, data.rng$score, main='Score by Length given Seed', xlab='Length', ylab='Score')
+dev.off()
+
+png('plots/Seed Interactions/seed by len.png')
+interaction.plot(data.rng$seedLevel, data.rng$len, data.rng$score, main='Score by Seed given Length', xlab='Seed', ylab='Score')
+dev.off()
+
+#Groups <- aggregate(score ~ algo + len, data=data.rng, FUN=mean, na.rm=FALSE)
+Groups <- tapply(data.rng$score, list(data.rng$algo, data.rng$len), mean, na.rm = FALSE)
+Groups
+```
+
+# by treatment groups
+```{r}
+groups <- interaction(data.rng$algo, data.rng$len)
+
+
+png('plots/Raw Data/Data Hist by Groups.png', width = 2400, height = 2000, res = 150)
+par(mfrow=c(4,5), mar = c(2, 2, 2, 2))
+for (g in levels(groups)) {
+  r <- data.rng$score[groups == g]
+
+  hist(
+    r,
+    main = g,
+    xlab = "Residual",
+    breaks = 20
+  )
+}
+dev.off()
+
+png('plots/Raw Data/Data Box by Groups.png', width = 2400, height = 2000, res = 150)
+par(mfrow=c(4,5), mar = c(2, 2, 2, 2))
+for (g in levels(groups)) {
+  r <- data.rng$score[groups == g]
+  boxplot(r, main=g)
+}
+dev.off()
+
+par(mfrow=c(4,5), mar = c(2, 2, 2, 2))
+for (g in levels(groups)) {
+  r <- data.rng$score[groups == g]
+  acf(r, lag.max=50, main=g)
+}
+
+for (g in levels(groups)) {
+  r <- data.rng$score[groups == g]
+  qqnorm(r, main=g)
+  qqline(r, col = "steelblue", lwd = 2)
+}
+  
+```
+
+# Data Analysis
+```{r}
+model.rng <- aov(score ~ algo * len + seedLevel, data=data.rng)
+model.sum <- summary(model.rng)
+model.sum
+```
+
+```{r}
+TukeyHSD(model.rng)
+```
+
+```{r}
+#data.rng$trans_score <- sapply(data.rng$score, function(x) {log(x)^(1/3)})
+#data.rng$trans_score <- (data.rng$score - mean(data.rng$score)) / sd(data.rng$score)
+data.rng$trans_score <- sign(log(data.rng$score)) * abs(log(data.rng$score))^(1/3)
+lm.rng <- lm(score ~ algo * len, data=data.rng)
+lm.sum <- summary(lm.rng)
+lm.sum
+AIC(lm.rng)
+BIC(lm.rng)
+
+hist(residuals(lm.rng, type='pearson'))
+acf(residuals(lm.rng, type='pearson'))
+qqnorm(residuals(lm.rng, type='pearson'), main=g)
+qqline(residuals(lm.rng, type='pearson'), col = "steelblue", lwd = 2)
+plot(lm.rng, which=1)
+plot(lm.rng, which=2)
+plot(lm.rng, which=3)
+plot(lm.rng, which=5)
+
+par(mfrow = c(3, 5))
+
+groups <- interaction(data.rng$algo, data.rng$len)
+
+# combined plots
+for (g in levels(groups)) {
+  r <- residuals(lm.rng)[groups == g]
+
+  hist(
+    r,
+    main = g,
+    xlab = "Residual",
+    breaks = 20
+  )
+}
+
+for (g in levels(groups)) {
+  r <- residuals(lm.rng)[groups == g]
+  
+  boxplot(r)
+
+}
+
+for (g in levels(groups)) {
+  r <- residuals(lm.rng)[groups == g]
+  
+  acf(r, lag.max=50)
+}
+
+for (g in levels(groups)) {
+  r <- residuals(lm.rng)[groups == g]
+
+  qqnorm(r, main=g)
+  qqline(r, col = "steelblue", lwd = 2)
+}
+
+# separate plots
+par(mfrow=c(1,1))
+for (g in levels(groups)) {
+  r <- residuals(lm.rng)[groups == g]
+
+  boxplot(r)
+  acf(r, lag.max=50)
+  qqnorm(r, main=g)
+  qqline(r, col = "steelblue", lwd = 2)
+}
+```
+# model comparison (with and without seed)
+```{r}
+lm.rng.seed <- lm(score~algo*len+seedLevel,data=data.rng)
+anova(lm.rng.seed, lm.rng)
+AIC(lm.rng.seed, lm.rng)
+BIC(lm.rng.seed, lm.rng)
+```
+
+# assessing variance
+```{r}
+# equal variance
+bartlett.test(score ~ interaction(algo,len), data=data.rng)
+
+library(car)
+leveneTest(score ~ algo * len, data=data.rng)
+```
+# account for non-constant variance
+```{r}
+library(nlme)
+library(emmeans)
+gls.rng.seed <- gls(score ~ algo * len + seedLevel,
+               weights = varIdent(form = ~ 1 | algo * len), 
+               data = data.rng)
+summary(gls.rng.seed)
+```
+
+```{r}
+gls.rng <- gls(score ~ algo * len,
+               weights = varIdent(form = ~ 1 | algo * len), 
+               data = data.rng)
+gls.summary <- summary(gls.rng)
+gls.summary
+```
+
+# save output
+```{r}
+coef_table <- as.data.frame(gls.summary$tTable)
+
+write.csv(
+  cbind(Term = rownames(coef_table), coef_table),
+  "gls_parameters.csv",
+  row.names = FALSE
+)
+```
+
+# raw residuals
+```{r}
+png('plots/Residuals/raw residuals box.png', width=1000, height=1000, res=150)
+boxplot(residuals(gls.rng), main='Raw Residuals')
+dev.off()
+
+png('plots/Residuals/raw residuals hist.png', width=1000, height=1000, res=150)
+hist(residuals(gls.rng), main='Raw Residuals')
+dev.off()
+```
+
+# save variances
+```{r}
+# estimated relative standard deviations for non-reference groups
+rel_sd_nonref <- coef(gls.rng$modelStruct$varStruct, unconstrained = FALSE)
+
+# construct the names of every algo × len group
+all_groups <- unique(paste(data.rng$algo, data.rng$len, sep = "*"))
+
+# identify the omitted reference group
+reference_group <- setdiff(all_groups, names(rel_sd_nonref))
+
+# add the reference group's relative SD of 1
+rel_sd <- c(setNames(1, reference_group),rel_sd_nonref)
+
+# base residual variance
+base_variance <- gls.rng$sigma^2
+
+# create output table
+variance_table <- data.frame(Group = names(rel_sd),
+                             Relative_SD = as.numeric(rel_sd),
+                             Relative_Variance = as.numeric(rel_sd)^2,
+                             Estimated_SD = gls.rng$sigma * as.numeric(rel_sd),
+                             Estimated_Variance = base_variance * as.numeric(rel_sd)^2,
+                             row.names = NULL)
+
+# sort for easier reading
+variance_table <- variance_table[order(variance_table$Group),]
+
+write.csv(variance_table,"gls_group_variances.csv",row.names = FALSE)
+variance_table
+```
+
+# plot variances
+```{r}
+stripchart(Estimated_SD ~ Group, data=variance_table, vertical=TRUE, las=2)
+stripchart(Relative_Variance ~ Group, data=variance_table, vertical=TRUE, las=2, main='Group Relative Variances')
+```
+
+```{r}
+#install.packages("performance")
+library(performance)
+
+# Get the R2 value instantly
+r2(gls.rng)
+r2(gls.rng.seed)
+
+# estimate via maximum likelihood
+model.seed.ML <- gls(score ~ algo * len + seedLevel,
+               weights = varIdent(form = ~ 1 | algo * len), 
+               data = data.rng, method='ML')
+model.ML <- gls(score ~ algo * len,
+               weights = varIdent(form = ~ 1 | algo * len), 
+               data = data.rng, method='ML')
+anova(model.ML, model.seed.ML)
+```
+
+# plot studentized residuals
+```{r}
+res.rng <- residuals(gls.rng, type='pearson')
+# residuals vs fitted
+par(mfrow=c(1,1),mar = c(5.1, 4.1, 4.1, 2.1))
+png('plots/Residuals/Residual Plot.png',width = 800, height = 800, res=150)
+plot(res.rng, main='Studentized Residuals Plot')
+abline(h=0, col='red')
+abline(h=-2, col='blue')
+abline(h=2, col='blue')
+dev.off()
+
+png('plots/Residuals/Residual vs Fitted.png',width = 800, height = 800, res=150)
+plot(gls.rng, resid(., type = "pearson") ~ fitted(.), 
+     xaxt = "n", yaxt = "n",  main = "Standardized Residuals vs Fitted",
+     xlab = 'Fitted', ylab = 'Std Residuals', abline=c(0,-2,2))
+dev.off()
+
+groups <- interaction(data.rng$algo, data.rng$len)
+
+# combined plots
+png('plots/Residuals/Residual Hist by Groups.png', width = 2400, height = 2000, res = 150)
+par(mfrow=c(4,5), mar = c(2, 2, 2, 2))
+for (g in levels(groups)) {
+  r <- res.rng[groups == g]
+  hist(
+    r,
+    main = g,
+    xlab = "Residual",
+    breaks = 20
+  )
+}
+dev.off()
+
+png('plots/Residuals/Residual QQ by Groups.png', width = 2400, height = 2000, res = 150)
+par(mfrow=c(4,5), mar = c(2, 2, 2, 2))
+for (g in levels(groups)) {
+  r <- res.rng[groups == g]
+  qqnorm(r, main=g) # accounting for the unequal var
+  qqline(r, col = "steelblue", lwd = 2)
+}
+dev.off()
+
+# box plot of groups to check whether unequal variance is eliminated
+# plot(gls.rng, resid(., type = "pearson") ~ interaction(algo , len), 
+#      id = 0.05, main = "Standardized Residuals by Group")
+par(mfrow=c(1,1),mar = c(5.1, 4.1, 4.1, 2.1))
+png('plots/Residuals/Residual Hist.png',width = 800, height = 800, res=150)
+hist(res.rng, main='Studentized Residuals')
+dev.off()
+
+png('plots/Residuals/Residual acf.png',width = 800, height = 800, res=150)
+acf(res.rng, main='Studentized Residuals')
+dev.off()
+
+png('plots/Residuals/Residual QQ.png',width = 800, height = 800, res=150)
+qqnorm(res.rng, main='Studentized Residuals') # accounting for the unequal var
+qqline(res.rng, col = "steelblue", lwd = 2)
+dev.off()
+```
+
+# residual independence
+```{r}
+Box.test(res.rng, lag=10, type='Ljung-Box')
+png('plots/Residuals/Residual Ljung Box.png', res=150)
+plot.ljun('studentized residuals', res.rng, 10)
+dev.off()
+randtests::runs.test(res.rng)
+acf(res.rng, lag=50)
+```
+
+# residual constant var
+```{r}
+gls.rng.constvar <- gls(score ~ algo * len, data=data.rng)
+anova(gls.rng.constvar, gls.rng)
+```
+
+# residual normality
+```{r}
+gls.groups.normality <- list(group=c(),p=c(),sig=c())
+for (g in levels(groups)) {
+  r <- res.rng[groups == g]
+  #print(g)
+  #print(shapiro.test(r))
+  gls.groups.normality$group <- c(gls.groups.normality$group, g)
+  p.val <- shapiro.test(r)$'p.value'
+  gls.groups.normality$p <- c(gls.groups.normality$p, p.val)
+  if(p.val <= 0.05){
+    gls.groups.normality$sig <- c(gls.groups.normality$sig, 'Not Normal')
+  } else {
+    gls.groups.normality$sig <- c(gls.groups.normality$sig, 'Normal')
+  }
+}
+gls.groups.normality <- as.data.frame(gls.groups.normality)
+gls.groups.normality
+write.csv(gls.groups.normality, file='gls_group_residual_normality.csv', row.names = FALSE)
+```
+
+
+# Tukey
+```{r}
+#emmeans(gls.rng, specs = pairwise ~ algo * len, adjust = "tukey")
+rng.means <- emmeans(gls.rng, ~ algo * len)
+group.means <- as.data.frame(rng.means)
+group.means
+
+# set a name vector to get the row index of each combination
+combo.names <- paste(group.means$algo, group.means$len, sep = ".")
+combo.names
+
+lens.rng <- emmeans(gls.rng, ~ len | algo)
+algos.rng <- emmeans(gls.rng, ~ algo | len)
+
+
+
+lens.rng
+algos.rng
+```
+
+```{r}
+# test best combo (LCG,900)
+LCG.900.all.comps <- as.data.frame(contrast(rng.means, method = "trt.vs.ctrl",
+         ref = match('LCG.900',combo.names),
+         adjust = "dunnett"))
+LCG.900.all.comps
+write.csv(LCG.900.all.comps, file='LCG900_comparisons.csv', row.names = FALSE)
+```
+
+```{r}
+# test lengths for different algorithms
+comp.by.algo <- as.data.frame(pairs(rng.means, by='algo', adjust='tukey'), infer=TRUE)
+comp.by.algo
+write.csv(comp.by.algo, file='comp_by_algo.csv',row.names = FALSE)
+comp.by.len <- as.data.frame(pairs(rng.means, by='len', adjust='tukey'), infer=TRUE)
+comp.by.len
+write.csv(comp.by.len, file='comp_by_len.csv',row.names = FALSE)
+```
+
+
+# linear contrast
+```{r}
+con.vec <- -1*(combo.names=='LCG.300')+(combo.names=='LCG.900')
+con.vec
+con.vec.2 <- 0.1*(group.means$algo=='LCG')+0.1*(group.means$algo=='RANDU')+
+  (-0.1)*(group.means$algo=='MT')+(-0.1)*(group.means$algo=='XOR')
+con.vec.2
+
+lin.con <- contrast(rng.means,
+                    method=list('linear.contrast'=con.vec,
+                                'family.constrast'=con.vec.2),
+                    adjust='bonferroni')
+summary(lin.con, infer = c(TRUE, TRUE), level = 0.95)
+```
+
+
+# data transformation
+```{r}
+data.rng$trans_score <- log(data.rng$score)
+gls.trans <- gls(log(score) ~ algo * len,
+               weights = varIdent(form = ~ 1 | algo * len), 
+               data = data.rng)
+summary(gls.trans)
+qqnorm(residuals(gls.trans, type='pearson'))
+qqline(residuals(gls.trans, type='pearson'), col = "steelblue", lwd = 2)
+```
