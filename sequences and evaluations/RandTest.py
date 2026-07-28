@@ -50,14 +50,3 @@ def RepetitionScore(seq, min_overlap=100, max_val=1024):
             strength = s
 
     return max(0.0, 1.0 - strength)
-
-if __name__ == '__main__':
-    arr1 = np.array([1,2,3,4])
-    arr2 = np.array([1,2,1,2])
-    print(entropy(arr1))
-    print(entropy(arr2))
-    print(runsTest(arr1))
-    print(piTest(arr1))
-    print(acfTest(arr1))
-    print(uniformityTest(arr1))
-    print(RepetitionScore(np.arange(1, 1001)))
